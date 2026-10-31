@@ -4,7 +4,7 @@ const botOptions = {
   host: '95.216.20.55', // Твой цифровой IP из Node Connection
   port: 29367,          // Твой порт
   username: 'AFK_Bot_Helper',   
-  version: '1.21.1'
+  version: '1.21.11'
 };
 
 let bot;

@@ -1,7 +1,7 @@
 const mineflayer = require('mineflayer');
 
 const botOptions = {
-  host: '95.216.20.55', // Твой цифровой IP из Node Connection
+  host: '95.216.20.55:29367', // Твой цифровой IP из Node Connection
   port: 29367,          // Твой порт
   username: 'AFK_Bot_Helper',   
   version: '1.21.11'
@@ -24,7 +24,7 @@ function createBot() {
     if (player.username !== bot.username) {
       console.log(`Игрок ${player.username} зашел! Бот выходит.`);
       bot.quit(); 
-      setTimeout(() => { createBot(); }, 900000); 
+      setTimeout(() => { createBot(); }, 120000); 
     }
   });
 

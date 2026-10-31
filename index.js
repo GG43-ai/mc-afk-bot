@@ -5,8 +5,7 @@ const botOptions = {
   port: 29367,          
   username: 'AFK_Bot_Helper',   
   version: '1.21.11',
-  // ОТКЛЮЧАЕМ ТЯЖЕЛЫЕ ФУНКЦИИ ДЛЯ ЭКОНОМИИ ПАМЯТИ:
-  physicsEnabled: false, 
+  physicsEnabled: false, // Оставляем выключенной по умолчанию для экономии RAM
   loadInternalPlugins: false
 };
 
@@ -17,9 +16,20 @@ function createBot() {
 
   bot.on('spawn', () => {
     console.log('Бот зашел!');
-    // Вместо прыжков просто шлем пустой пакет раз в минуту, чтобы хостинг не кикнул за АФК
+    
+    // Цикл прыжков каждые 60000 миллисекунд (1 минута)
     setInterval(() => {
-      if (bot && bot.swingArm) bot.swingArm();
+      if (bot) {
+        bot.physicsEnabled = true; // Включаем физику, чтобы бот мог двигаться
+        bot.setControlState('jump', true); // Нажимаем прыжок
+        
+        setTimeout(() => {
+          if (bot) {
+            bot.setControlState('jump', false); // Отпускаем прыжок
+            bot.physicsEnabled = false; // Снова отключаем физику для экономии памяти
+          }
+        }, 500); // Прыгаем в течение 0.5 секунды
+      }
     }, 60000);
   });
 
@@ -30,7 +40,7 @@ function createBot() {
       setTimeout(() => {
          console.log('Возвращаем бота...');
          createBot();
-      }, 120000); // Поставил 2 минуты задержки вместо 15, чтобы возвращался быстрее
+      }, 120000); // 2 минуты задержки перед возвращением
     }
   });
 

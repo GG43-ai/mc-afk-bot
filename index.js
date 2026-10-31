@@ -6,7 +6,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
-  res.send('Бот активен и удерживает AFK-статус!');
+  res.send('Бот постоянно на сервере и удерживает шифт!');
 });
 
 app.listen(PORT, () => {
@@ -18,9 +18,8 @@ const botOptions = {
   host: '95.216.20.55', 
   port: 29367,          
   username: 'AFK_Bot_Helper',   
-  version: false // Отключает строгую проверку и включает автоопределение протокола
+  version: false // Автоопределение версии протокола для 1.21.x
 };
-
 
 let bot;
 let afkInterval;
@@ -29,9 +28,9 @@ function createBot() {
   bot = mineflayer.createBot(botOptions);
 
   bot.on('spawn', () => {
-    console.log('[MC] Бот успешно зашел на сервер!');
+    console.log('[MC] Бот зашел на сервер и садится на шифт!');
     
-    // Авторизация на сервере (AuthMe / nLogin)
+    // Авторизация на сервере (если плагин требует ввода пароля)
     setTimeout(() => {
       if (bot && bot.chat) {
         bot.chat('/register superpassword123 superpassword123');
@@ -39,35 +38,36 @@ function createBot() {
       }
     }, 2000);
 
-    // Очищаем старый интервал перед созданием нового, чтобы избежать утечки памяти
+    // Заставляем бота ВСЕГДА зажимать шифт (sneak)
+    setTimeout(() => {
+      if (bot && bot.entity) {
+        bot.setControlState('sneak', true);
+      }
+    }, 3000);
+
+    // Очищаем старый таймер перед созданием нового
     if (afkInterval) clearInterval(afkInterval);
 
-    // Прыгаем раз в минуту для обхода AFK (без отключения физики во избежание кика античитом)
+    // Интервал обхода AFK: прыгаем раз в минуту, не отжимая шифт
     afkInterval = setInterval(() => {
       if (bot && bot.entity) {
+        // Подпрыгиваем
         bot.setControlState('jump', true); 
+        
         setTimeout(() => {
-          if (bot && bot.entity) bot.setControlState('jump', false); 
+          if (bot && bot.entity) {
+            bot.setControlState('jump', false); 
+            // На всякий случай перепроверяем, что шифт всё еще зажат
+            bot.setControlState('sneak', true); 
+          }
         }, 500); 
       }
-    }, 60000);
+    }, 60000); // Раз в 60 секунд
   });
 
-  // Логика выхода при онлайне: бот проверяет количество людей при входе нового игрока
-  bot.on('playerJoined', (player) => {
-    if (!bot || !bot.players) return;
-    
-    const playerCount = Object.keys(bot.players).length;
-    // Если на сервере больше 1 игрока (вы + кто-то еще), бот уступает место
-    if (playerCount > 1 && player.username !== bot.username) {
-      console.log(`[MC] Зашел игрок ${player.username}. На сервере есть люди (${playerCount}). Бот выходит.`);
-      if (afkInterval) clearInterval(afkInterval);
-      bot.quit(); 
-    }
-  });
-
+  // Логика автоматического перезахода, если сервер перезапустится или кикнет бота
   bot.on('end', () => { 
-    console.log('[MC] Бот отключился от сервера. Переподключение через 1 минуту...'); 
+    console.log('[MC] Бот отключился. Переподключение через 1 минуту...'); 
     if (afkInterval) clearInterval(afkInterval);
     setTimeout(createBot, 60000); 
   });

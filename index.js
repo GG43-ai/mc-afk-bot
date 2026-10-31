@@ -1,11 +1,12 @@
 const mineflayer = require('mineflayer');
 
 const botOptions = {
-  host: '95.216.20.55:29367', // Твой цифровой IP из Node Connection
-  port: 29367,          // Твой порт
+  host: '95.216.20.55', // ТОЛЬКО ЦИФРЫ IP (без :29367)
+  port: 29367,          // Порт пишется отдельно на этой строчке
   username: 'AFK_Bot_Helper',   
-  version: '1.21.11'
+  version: '1.21.11'    // Версию оставляем 1.21.11
 };
+
 
 let bot;
 

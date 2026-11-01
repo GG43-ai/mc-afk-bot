@@ -1,7 +1,7 @@
 const mineflayer = require('mineflayer');
 const express = require('express');
 
-// 1. ВСТРОЕННЫЙ ВЕБ-СЕРВЕР ДЛЯ RENDER.COM
+// 1. ВЕБ-СЕРВЕР ДЛЯ RENDER
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -10,7 +10,7 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`[Web] Сервер запущен на порту ${PORT} для Render`);
+  console.log(`[Web] Сервер запущен на порту ${PORT}`);
 });
 
 // 2. НАСТРОЙКИ MINECRAFT БОТА
@@ -18,7 +18,7 @@ const botOptions = {
   host: '95.216.20.55', 
   port: 29367,          
   username: 'AFK_Bot_Helper',   
-  version: "1.21.11"
+  version: "1.21.11" // Версія чітко у лапках
 };
 
 let bot;
@@ -26,7 +26,6 @@ let afkInterval;
 let reconnectTimeout;
 
 function createBot() {
-  // Очищаем старые таймеры переподключения, если они были активны
   if (reconnectTimeout) clearTimeout(reconnectTimeout);
   
   bot = mineflayer.createBot(botOptions);
@@ -34,7 +33,6 @@ function createBot() {
   bot.on('spawn', () => {
     console.log('[MC] Бот успешно зашел на сервер!');
     
-    // Авторизация на сервере
     setTimeout(() => {
       if (bot && bot.chat) {
         bot.chat('/register superpassword123 superpassword123');
@@ -42,14 +40,12 @@ function createBot() {
       }
     }, 2000);
 
-    // Включаем постоянный шифт
     setTimeout(() => {
       if (bot && bot.entity) bot.setControlState('sneak', true);
     }, 3000);
 
     if (afkInterval) clearInterval(afkInterval);
 
-    // Прыгаем раз в минуту на шифте
     afkInterval = setInterval(() => {
       if (bot && bot.entity) {
         bot.setControlState('jump', true); 
@@ -62,7 +58,6 @@ function createBot() {
       }
     }, 60000);
 
-    // ПРОВЕРКА ПРИ СПАВНЕ: если бот зашел, а на сервере уже кто-то есть кроме него
     setTimeout(() => {
       if (bot && bot.players) {
         const playerCount = Object.keys(bot.players).length;
@@ -72,10 +67,9 @@ function createBot() {
           bot.quit();
         }
       }
-    }, 5000); // Даем 5 секунд на прогрузку списка игроков
+    }, 5000);
   });
 
-  // Логика ВЫХОДА: кто-то зашел — бот сразу отключается
   bot.on('playerJoined', (player) => {
     if (!bot || !bot.players) return;
     if (player.username !== bot.username) {
@@ -89,16 +83,13 @@ function createBot() {
     console.log('[MC] Бот отключился от сервера.'); 
     if (afkInterval) clearInterval(afkInterval);
     
-    // Бот НЕ будет пытаться зайти сам по таймеру, если его кикнуло из-за игрока.
-    // Переподключение сработает только при падении сервера (каждые 3 минуты для проверки)
     reconnectTimeout = setTimeout(() => {
       console.log('[MC] Проверяем сервер на доступность...');
       createBot();
-    }, 180000); // 3 минуты
+    }, 180000);
   });
   
   bot.on('error', (err) => console.log('[MC] Ошибка бота: ', err));
 }
 
-// Запуск бота при старте процесса
 createBot();

@@ -1,7 +1,7 @@
 const mineflayer = require('mineflayer');
 const express = require('express');
 
-// 1. ВЕБ-СЕРВЕР ДЛЯ RENDER
+// 1. ВСТРОЕННЫЙ ВЕБ-СЕРВЕР ДЛЯ RENDER.COM
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -10,7 +10,7 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`[Web] Сервер запущен на порту ${PORT}`);
+  console.log(`[Web] Сервер запущен на порту ${PORT} для Render`);
 });
 
 // 2. НАСТРОЙКИ MINECRAFT БОТА
@@ -18,7 +18,7 @@ const botOptions = {
   host: '95.216.20.55', 
   port: 29367,          
   username: 'AFK_Bot_Helper',   
-  version: "1.21.11" // Версія чітко у лапках
+  version: "1.21.11"
 };
 
 let bot;
@@ -33,6 +33,7 @@ function createBot() {
   bot.on('spawn', () => {
     console.log('[MC] Бот успешно зашел на сервер!');
     
+    // Авторизация на сервере
     setTimeout(() => {
       if (bot && bot.chat) {
         bot.chat('/register superpassword123 superpassword123');
@@ -40,24 +41,26 @@ function createBot() {
       }
     }, 2000);
 
+    // Включаем постоянный шифт
     setTimeout(() => {
       if (bot && bot.entity) bot.setControlState('sneak', true);
     }, 3000);
 
     if (afkInterval) clearInterval(afkInterval);
 
+    // Прыгаем раз в минуту на шифте
     afkInterval = setInterval(() => {
       if (bot && bot.entity) {
         bot.setControlState('jump', true); 
         setTimeout(() => {
           if (bot && bot.entity) {
-            bot.setControlState('jump', false); 
-            bot.setControlState('sneak', true); 
+            bot.setControlState('jump', false) or bot.setControlState('sneak', true); 
           }
         }, 500); 
       }
     }, 60000);
 
+    // ПРОВЕРКА ПРИ СПАВНЕ
     setTimeout(() => {
       if (bot && bot.players) {
         const playerCount = Object.keys(bot.players).length;
@@ -86,7 +89,7 @@ function createBot() {
     reconnectTimeout = setTimeout(() => {
       console.log('[MC] Проверяем сервер на доступность...');
       createBot();
-    }, 180000);
+    }, 180000); // 3 минуты
   });
   
   bot.on('error', (err) => console.log('[MC] Ошибка бота: ', err));

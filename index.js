@@ -18,7 +18,7 @@ const botOptions = {
   host: '95.216.20.55', 
   port: 29367,          
   username: 'AFK_Bot_Helper',   
-  version: 1.21.11
+  version: "1.21.11"
 };
 
 let bot;

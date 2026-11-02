@@ -1,24 +1,52 @@
 const mineflayer = require('mineflayer');
 
 const botOptions = {
-  host: 'mc2205271.fmcs.cloud',        
+  host: 'mc2205271.fmcs.cloud', 
   username: 'AFK_Bot_Helper',   
-  version: '1.21.11' // Указываем точную версию вашей Java 1.21.1 вместо false
+  version: '1.21.1' 
 };
 
-let bot;
-let afkInterval;
-let reconnectTimeout;
+let bot = null;
+let afkInterval = null;
+let checkTimeout = null;
 
-function createBot() {
-  if (reconnectTimeout) clearTimeout(reconnectTimeout);
+function checkServerAndConnect() {
+  if (checkTimeout) clearTimeout(checkTimeout);
   
+  // Если бот уже на сервере, проверка не нужна
+  if (bot && bot.entity) return;
+
+  console.log('[Ping] Проверяем онлайн сервера без захода...');
+  
+  // Отправляем легкий пинг-запрос серверу
+  mineflayer.ping({ host: botOptions.host, version: botOptions.version }, (err, status) => {
+    if (err) {
+      console.log('[Ping] Сервер недоступен или выключен. Проверим через 2 минуты...');
+      checkTimeout = setTimeout(checkServerAndConnect, 120000);
+      return;
+    }
+
+    // Узнаем количество игроков на сервере из пакета пинга
+    const currentPlayers = status.players.online;
+    console.log(`[Ping] Сейчас на сервере игроков: ${currentPlayers}`);
+
+    if (currentPlayers === 0) {
+      console.log('[MC] Сервер пуст! Запускаем полноценное подключение бота...');
+      startBot();
+    } else {
+      console.log('[Ping] На сервере кто-то играет. Бот ждет. Следующая проверка через 2 минуты...');
+      checkTimeout = setTimeout(checkServerAndConnect, 120000);
+    }
+  });
+}
+
+function startBot() {
   bot = mineflayer.createBot(botOptions);
 
   bot.on('spawn', () => {
     console.log('[MC] Бот успешно зашел на сервер!');
     
-    // Авторизация на сервере
+    // Авторизация
     setTimeout(() => {
       if (bot && bot.chat) {
         bot.chat('/register superpassword123 superpassword123');
@@ -26,14 +54,14 @@ function createBot() {
       }
     }, 2000);
 
-    // Включаем постоянный шифт (приседание)
+    // Включаем постоянный шифт
     setTimeout(() => {
       if (bot && bot.entity) bot.setControlState('sneak', true);
     }, 3000);
 
     if (afkInterval) clearInterval(afkInterval);
 
-    // Прыгаем раз в минуту на шифте
+    // Прыжки раз в минуту
     afkInterval = setInterval(() => {
       if (bot && bot.entity) {
         bot.setControlState('jump', true); 
@@ -45,37 +73,31 @@ function createBot() {
         }, 500); 
       }
     }, 60000);
-
-    // Быстрая проверка при входе: если на сервере уже кто-то есть кроме бота, сразу уходим
-    setTimeout(() => {
-      if (bot && bot.players) {
-        const playerCount = Object.keys(bot.players).length;
-        if (playerCount > 1) {
-          console.log(`[MC] На сервере есть игроки. Бот уступает место.`);
-          if (afkInterval) clearInterval(afkInterval);
-          bot.quit();
-        }
-      }
-    }, 5000);
   });
 
-  // Если игрок заходит, пока бот на сервере — бот мгновенно выходит
+  // Если вы или другой игрок заходите на сервер — бот МОМЕНТАЛЬНО выходит
   bot.on('playerJoined', (player) => {
     if (!bot || !bot.players) return;
     if (player.username !== bot.username) {
-      console.log(`[MC] Игрок ${player.username} зашел. Бот выходит.`);
+      console.log(`[MC] Игрок ${player.username} зашел на сервер. Бот мгновенно отключается.`);
       if (afkInterval) clearInterval(afkInterval);
       bot.quit(); 
     }
   });
 
   bot.on('end', () => { 
-    console.log('[MC] Бот отключился. Проверка сервера через 3 минуты...'); 
+    console.log('[MC] Бот отключился от сервера. Возвращаемся в режим скрытых проверок...'); 
     if (afkInterval) clearInterval(afkInterval);
-    reconnectTimeout = setTimeout(createBot, 180000); 
+    bot = null;
+    // После выхода сразу запускаем цикл тихих пинг-проверок раз в 2 минуты
+    checkTimeout = setTimeout(checkServerAndConnect, 120000);
   });
   
-  bot.on('error', (err) => console.log('[MC] Ошибка: ', err));
+  bot.on('error', (err) => {
+    console.log('[MC] Ошибка бота: ', err);
+    bot = null;
+  });
 }
 
-createBot();
+// Запускаем первую тихую проверку при старте скрипта
+checkServerAndConnect();

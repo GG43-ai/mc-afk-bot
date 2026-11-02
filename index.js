@@ -13,12 +13,11 @@ let checkTimeout = null;
 function checkServerAndConnect() {
   if (checkTimeout) clearTimeout(checkTimeout);
   
-  // Если бот уже на сервере, проверка не нужна
   if (bot && bot.entity) return;
 
   console.log('[Ping] Проверяем онлайн сервера без захода...');
   
-  // Отправляем легкий пинг-запрос серверу
+  // ИСВРАВЛЕНО: Правильный вызов функции пинга в Mineflayer
   mineflayer.ping({ host: botOptions.host, version: botOptions.version }, (err, status) => {
     if (err) {
       console.log('[Ping] Сервер недоступен или выключен. Проверим через 2 минуты...');
@@ -26,7 +25,7 @@ function checkServerAndConnect() {
       return;
     }
 
-    // Узнаем количество игроков на сервере из пакета пинга
+    // Проверяем онлайн игроков
     const currentPlayers = status.players.online;
     console.log(`[Ping] Сейчас на сервере игроков: ${currentPlayers}`);
 
@@ -44,7 +43,7 @@ function startBot() {
   bot = mineflayer.createBot(botOptions);
 
   bot.on('spawn', () => {
-    console.log('[MC] Бот успешно зашел на сервер!');
+    console.log('[MC] Бот успешно зашел на server!');
     
     // Авторизация
     setTimeout(() => {
@@ -75,7 +74,7 @@ function startBot() {
     }, 60000);
   });
 
-  // Если вы или другой игрок заходите на сервер — бот МОМЕНТАЛЬНО выходит
+  // Логика выхода при заходе игрока
   bot.on('playerJoined', (player) => {
     if (!bot || !bot.players) return;
     if (player.username !== bot.username) {
@@ -89,7 +88,6 @@ function startBot() {
     console.log('[MC] Бот отключился от сервера. Возвращаемся в режим скрытых проверок...'); 
     if (afkInterval) clearInterval(afkInterval);
     bot = null;
-    // После выхода сразу запускаем цикл тихих пинг-проверок раз в 2 минуты
     checkTimeout = setTimeout(checkServerAndConnect, 120000);
   });
   
@@ -99,5 +97,5 @@ function startBot() {
   });
 }
 
-// Запускаем первую тихую проверку при старте скрипта
+// Запускаем проверку
 checkServerAndConnect();

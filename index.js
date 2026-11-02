@@ -1,9 +1,11 @@
 const mineflayer = require('mineflayer');
+// ИСПРАВЛЕНО: Импортируем отдельную функцию пинга из протокола
+const ping = require('minecraft-protocol').ping;
 
 const botOptions = {
   host: 'mc2205271.fmcs.cloud', 
   username: 'AFK_Bot_Helper',   
-  version: '1.21.1' 
+  version: '1.21.11' 
 };
 
 let bot = null;
@@ -17,8 +19,8 @@ function checkServerAndConnect() {
 
   console.log('[Ping] Проверяем онлайн сервера без захода...');
   
-  // ИСВРАВЛЕНО: Правильный вызов функции пинга в Mineflayer
-  mineflayer.ping({ host: botOptions.host, version: botOptions.version }, (err, status) => {
+  // ИСПРАВЛЕНО: Вызываем чистую функцию ping напрямую
+  ping({ host: botOptions.host, version: botOptions.version }, (err, status) => {
     if (err) {
       console.log('[Ping] Сервер недоступен или выключен. Проверим через 2 минуты...');
       checkTimeout = setTimeout(checkServerAndConnect, 120000);
@@ -43,7 +45,7 @@ function startBot() {
   bot = mineflayer.createBot(botOptions);
 
   bot.on('spawn', () => {
-    console.log('[MC] Бот успешно зашел на server!');
+    console.log('[MC] Бот успешно зашел на сервер!');
     
     // Авторизация
     setTimeout(() => {
@@ -78,7 +80,7 @@ function startBot() {
   bot.on('playerJoined', (player) => {
     if (!bot || !bot.players) return;
     if (player.username !== bot.username) {
-      console.log(`[MC] Игрок ${player.username} зашел на сервер. Бот мгновенно отключается.`);
+      console.log(`[MC] Игрок ${player.username} зашел на server. Бот мгновенно отключается.`);
       if (afkInterval) clearInterval(afkInterval);
       bot.quit(); 
     }

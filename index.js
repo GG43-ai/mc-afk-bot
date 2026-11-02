@@ -1,9 +1,10 @@
 const mineflayer = require('mineflayer');
 
 const botOptions = {
-  host: 'mc2205271.fmcs.cloud', // Основной доменный адрес из панели сервера
+  host: 'mc2205271.fmcs.cloud', 
+  port: 29367, // Возвращаем ваш порт, чтобы бот шел на конкретно ваш сервер         
   username: 'AFK_Bot_Helper',   
-  version: false
+  version: '1.21.11' // Указываем точную версию вашей Java 1.21.1 вместо false
 };
 
 let bot;

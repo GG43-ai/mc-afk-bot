@@ -1,10 +1,9 @@
 const mineflayer = require('mineflayer');
 
 const botOptions = {
-  host: '95.216.20.55', 
-  port: 29367,          
+  host: 'mc2205271.fmcs.cloud', // Основной доменный адрес из панели сервера
   username: 'AFK_Bot_Helper',   
-  version: false // Автоопределение версии протокола для сервера 1.21.x
+  version: false 
 };
 
 let bot;

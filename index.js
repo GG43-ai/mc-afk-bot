@@ -1,24 +1,10 @@
 const mineflayer = require('mineflayer');
-const express = require('express');
 
-// 1. ВСТРОЕННЫЙ ВЕБ-СЕРВЕР ДЛЯ RENDER.COM
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.get('/', (req, res) => {
-  res.send('Бот активен! Выходит, если есть люди, и заходит, если сервер пуст.');
-});
-
-app.listen(PORT, () => {
-  console.log(`[Web] Сервер запущен на порту ${PORT} для Render`);
-});
-
-// 2. НАСТРОЙКИ MINECRAFT БОТА
 const botOptions = {
   host: '95.216.20.55', 
   port: 29367,          
   username: 'AFK_Bot_Helper',   
-  version: "1.21.11"
+  version: false // Автоопределение версии протокола для сервера 1.21.x
 };
 
 let bot;
@@ -41,7 +27,7 @@ function createBot() {
       }
     }, 2000);
 
-    // Включаем постоянный шифт
+    // Включаем постоянный шифт (приседание)
     setTimeout(() => {
       if (bot && bot.entity) bot.setControlState('sneak', true);
     }, 3000);
@@ -54,18 +40,19 @@ function createBot() {
         bot.setControlState('jump', true); 
         setTimeout(() => {
           if (bot && bot.entity) {
-            bot.setControlState('jump', false) or bot.setControlState('sneak', true); 
+            bot.setControlState('jump', false); 
+            bot.setControlState('sneak', true); 
           }
         }, 500); 
       }
     }, 60000);
 
-    // ПРОВЕРКА ПРИ СПАВНЕ
+    // Быстрая проверка при входе: если на сервере уже кто-то есть кроме бота, сразу уходим
     setTimeout(() => {
       if (bot && bot.players) {
         const playerCount = Object.keys(bot.players).length;
         if (playerCount > 1) {
-          console.log(`[MC] На сервере обнаружены люди (${playerCount} игрок(ов)). Бот уступает место.`);
+          console.log(`[MC] На сервере есть игроки. Бот уступает место.`);
           if (afkInterval) clearInterval(afkInterval);
           bot.quit();
         }
@@ -73,26 +60,23 @@ function createBot() {
     }, 5000);
   });
 
+  // Если игрок заходит, пока бот на сервере — бот мгновенно выходит
   bot.on('playerJoined', (player) => {
     if (!bot || !bot.players) return;
     if (player.username !== bot.username) {
-      console.log(`[MC] Игрок ${player.username} зашел на сервер. Бот отключается.`);
+      console.log(`[MC] Игрок ${player.username} зашел. Бот выходит.`);
       if (afkInterval) clearInterval(afkInterval);
       bot.quit(); 
     }
   });
 
   bot.on('end', () => { 
-    console.log('[MC] Бот отключился от сервера.'); 
+    console.log('[MC] Бот отключился. Проверка сервера через 3 минуты...'); 
     if (afkInterval) clearInterval(afkInterval);
-    
-    reconnectTimeout = setTimeout(() => {
-      console.log('[MC] Проверяем сервер на доступность...');
-      createBot();
-    }, 180000); // 3 минуты
+    reconnectTimeout = setTimeout(createBot, 180000); 
   });
   
-  bot.on('error', (err) => console.log('[MC] Ошибка бота: ', err));
+  bot.on('error', (err) => console.log('[MC] Ошибка: ', err));
 }
 
 createBot();
